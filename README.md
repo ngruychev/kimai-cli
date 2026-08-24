@@ -184,6 +184,21 @@ kimai-cli me
 kimai-cli completion zsh > "${fpath[1]}/_kimai-cli"
 ```
 
+## Prior art
+
+kimai-cli is an independent implementation rather than a fork, and contains no
+code from the projects below.
+
+- [anned20/kicli](https://github.com/anned20/kicli) is another Go CLI for
+  Kimai. It prompted this one, and covers interactive tracking with a smaller
+  command set.
+- [lucassabreu/clockify-cli](https://github.com/lucassabreu/clockify-cli) is
+  the Clockify CLI whose command surface this deliberately mirrors, so that
+  habits and scripts carry over. Clockify terms map onto Kimai ones: a client
+  is a customer, and a task is an activity.
+- [kimai/cli](https://github.com/kimai/cli) is the official PHP console
+  client.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
