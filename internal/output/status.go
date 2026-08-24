@@ -3,6 +3,8 @@ package output
 import (
 	"context"
 	"encoding/json"
+	"reflect"
+	"sort"
 	"time"
 
 	"github.com/anned20/kimai-cli/internal/kimai"
@@ -217,4 +219,20 @@ func (s *Status) MarshalJSON() ([]byte, error) {
 		DailyDuration:   daily,
 		WeeklyDuration:  weekly,
 	})
+}
+
+// StatusFields lists the template fields available on a status, derived from
+// the type's own methods so the help text cannot drift from the code.
+func StatusFields() []string {
+	t := reflect.TypeOf(&Status{})
+	names := make([]string, 0, t.NumMethod())
+	for i := range t.NumMethod() {
+		name := t.Method(i).Name
+		if name == "MarshalJSON" {
+			continue
+		}
+		names = append(names, "."+name)
+	}
+	sort.Strings(names)
+	return names
 }

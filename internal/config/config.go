@@ -27,6 +27,9 @@ type Config struct {
 	DefaultProject int `toml:"default_project"`
 	// StatusFormat is the template used by `status` when --format is omitted.
 	StatusFormat string `toml:"status_format"`
+	// Interactive makes commands prompt by default, as if -i were given.
+	// An explicit --interactive=false still overrides it.
+	Interactive bool `toml:"interactive"`
 }
 
 // Path returns the location of the config file, honouring KIMAI_CONFIG.

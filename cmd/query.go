@@ -15,12 +15,10 @@ func newStatusCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "status",
 		Short: "Show the running entry",
-		Long: "Prints the running entry. With --format, the template may use\n" +
-			"{{.Description}} {{.Project}} {{.Customer}} {{.Activity}} {{.Tags}}\n" +
-			"{{.Billable}} {{.Running}} {{.ID}} {{.CurrentDuration}}\n" +
-			"{{.DailyDuration}} {{.WeeklyDuration}}.\n\n" +
-			"The daily and weekly totals each cost one extra API call, and are\n" +
-			"only fetched when the template names them.",
+		Long: "Prints the running entry.\n\n" + formatHelp(output.StatusFields()) +
+			"\n\nProject, Customer and Activity resolve the entity index, and the\n" +
+			"daily and weekly totals each cost one extra API call. All are\n" +
+			"fetched only when the template names them.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := setup(); err != nil {
 				return err
@@ -81,7 +79,7 @@ func newLogCmd() *cobra.Command {
 		Short: "List entries for a day or date range",
 		Long: "With no arguments, lists today. With one argument, lists that day.\n" +
 			"With two, lists the inclusive range. Dates are YYYY-MM-DD, or the\n" +
-			"words today and yesterday.",
+			"words today and yesterday.\n\n" + formatHelp(output.EntryFields()),
 		Args: cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := setup(); err != nil {
@@ -115,6 +113,7 @@ func newReportCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "report [start] [end]",
 		Short: "Report entries over a date range",
+		Long:  "Reports entries over a date range.\n\n" + formatHelp(output.EntryFields()),
 		Args:  cobra.MaximumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := setup(); err != nil {
@@ -232,6 +231,7 @@ func newShowCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show <id>",
 		Short: "Show one entry in detail",
+		Long:  "Shows one entry in detail.\n\n" + formatHelp(output.EntryFields()),
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := setup(); err != nil {

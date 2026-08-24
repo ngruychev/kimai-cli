@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
 	"strings"
 	"text/tabwriter"
 	"text/template"
@@ -195,4 +196,15 @@ func Table(w io.Writer, entries []Entry, showDate bool) error {
 	fmt.Fprintf(w, "\nTotal: %s across %d %s\n",
 		Duration(time.Duration(total)*time.Second), len(entries), noun)
 	return nil
+}
+
+// EntryFields lists the template fields available on an entry, derived from
+// the struct itself so the help text cannot drift from the code.
+func EntryFields() []string {
+	t := reflect.TypeOf(Entry{})
+	names := make([]string, 0, t.NumField())
+	for i := range t.NumField() {
+		names = append(names, "."+t.Field(i).Name)
+	}
+	return names
 }

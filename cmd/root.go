@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/anned20/kimai-cli/internal/config"
 	"github.com/anned20/kimai-cli/internal/kimai"
@@ -45,6 +46,17 @@ func newRootCmd() *cobra.Command {
 	root.PersistentFlags().BoolVarP(&interactive, "interactive", "i", false,
 		"prompt for anything not given on the command line")
 
+	// Apply the configured interactive default before any command runs. A
+	// flag given explicitly still wins, including --interactive=false.
+	root.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		if cmd.Flags().Changed("interactive") {
+			return
+		}
+		if c, err := config.Load(); err == nil && c.Interactive {
+			interactive = true
+		}
+	}
+
 	root.AddCommand(
 		newConfigCmd(), newInCmd(), newOutCmd(), newStatusCmd(), newLogCmd(),
 		newReportCmd(), newCloneCmd(), newShowCmd(), newEditCmd(), newDeleteCmd(),
@@ -80,6 +92,14 @@ func lookup(ctx context.Context) (*kimai.Lookup, error) {
 	}
 	lookupCache = l
 	return l, nil
+}
+
+// formatHelp describes the fields a --format template may use. It is built
+// from the rendered types themselves, so it stays correct as they change.
+func formatHelp(fields []string) string {
+	return "Fields available to --format:\n  " + strings.Join(fields, " ") +
+		"\n\nTemplate functions: truncate, join, upper, lower, default.\n" +
+		"Wrap output in {{if .Running}}...{{end}} to print nothing when idle."
 }
 
 // outputFlags carries the rendering options shared by listing commands.

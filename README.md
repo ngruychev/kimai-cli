@@ -29,7 +29,11 @@ url = "https://kimai.example.com"
 token_command = "gopass show -o kimai-token"
 default_activity = 1
 status_format = "{{if .Running}}{{.Project}} {{.CurrentDuration}}{{end}}"
+interactive = true
 ```
+
+Set `interactive = true` to make commands prompt by default, as if `-i` were
+given every time. `--interactive=false` overrides it for a single run.
 
 `token_command` runs a shell command to obtain the API token, keeping the
 secret out of the config file. Set `token` instead to give it literally, or
@@ -102,9 +106,10 @@ kimai-cli status --format '{{.Project}}: {{.CurrentDuration}}'
 kimai-cli status --format '{{.CurrentDuration}} today {{.DailyDuration}}'
 ```
 
-Available fields: `.Running` `.ID` `.Description` `.Project` `.Customer`
-`.Activity` `.Tags` `.Billable` `.CurrentDuration` `.DailyDuration`
-`.WeeklyDuration`.
+Run `kimai-cli status --help` for the available fields; `log --help`,
+`report --help` and `show --help` list the fields their own entries expose.
+Both lists are generated from the rendered types, so they cannot fall out of
+date.
 
 `.CurrentDuration` is free. `.DailyDuration` and `.WeeklyDuration` each cost one
 extra API call, and `.Project`, `.Customer` and `.Activity` may cost the entity

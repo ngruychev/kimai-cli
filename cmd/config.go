@@ -96,6 +96,7 @@ func newConfigShowCmd() *cobra.Command {
 				DefaultProject  int    `json:"default_project"`
 				DefaultActivity int    `json:"default_activity"`
 				StatusFormat    string `json:"status_format"`
+				Interactive     bool   `json:"interactive"`
 			}{
 				URL:             c.URL,
 				TokenCommand:    c.TokenCommand,
@@ -103,6 +104,7 @@ func newConfigShowCmd() *cobra.Command {
 				DefaultProject:  c.DefaultProject,
 				DefaultActivity: c.DefaultActivity,
 				StatusFormat:    c.StatusFormat,
+				Interactive:     c.Interactive,
 			}
 			if out.json {
 				return output.JSON(os.Stdout, shown)
@@ -113,6 +115,7 @@ func newConfigShowCmd() *cobra.Command {
 			fmt.Printf("default_project   %d\n", shown.DefaultProject)
 			fmt.Printf("default_activity  %d\n", shown.DefaultActivity)
 			fmt.Printf("status_format     %s\n", shown.StatusFormat)
+			fmt.Printf("interactive       %t\n", shown.Interactive)
 			return nil
 		},
 	}
