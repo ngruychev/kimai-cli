@@ -7,7 +7,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/anned20/kimai-cli/internal/kimai"
+	"github.com/ngruychev/kimai-cli/internal/kimai"
 )
 
 // LookupFunc resolves the entity-name index, which costs several API calls.

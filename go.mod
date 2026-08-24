@@ -1,4 +1,4 @@
-module github.com/anned20/kimai-cli
+module github.com/ngruychev/kimai-cli
 
 go 1.27.0
 

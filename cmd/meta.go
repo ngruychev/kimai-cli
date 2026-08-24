@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/anned20/kimai-cli/internal/output"
+	"github.com/ngruychev/kimai-cli/internal/output"
 	"github.com/spf13/cobra"
 )
 

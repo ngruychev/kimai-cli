@@ -6,7 +6,7 @@ static Go binary: no PHP, no Docker, no runtime.
 ## Install
 
 ```sh
-go install github.com/anned20/kimai-cli@latest
+go install github.com/ngruychev/kimai-cli@latest
 ```
 
 Or build from a checkout:

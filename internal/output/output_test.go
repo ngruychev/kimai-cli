@@ -1,7 +1,7 @@
 package output
 
 import (
-	"github.com/anned20/kimai-cli/internal/kimai"
+	"github.com/ngruychev/kimai-cli/internal/kimai"
 	"testing"
 	"time"
 	"unicode/utf8"

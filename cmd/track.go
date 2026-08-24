@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/anned20/kimai-cli/internal/kimai"
-	"github.com/anned20/kimai-cli/internal/output"
+	"github.com/ngruychev/kimai-cli/internal/kimai"
+	"github.com/ngruychev/kimai-cli/internal/output"
 	"github.com/spf13/cobra"
 )
 

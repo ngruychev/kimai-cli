@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/anned20/kimai-cli/internal/kimai"
+	"github.com/ngruychev/kimai-cli/internal/kimai"
 )
 
 // Entry is the rendered form of a timesheet: names resolved, durations

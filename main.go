@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/anned20/kimai-cli/cmd"
+	"github.com/ngruychev/kimai-cli/cmd"
 )
 
 func main() {
