@@ -183,3 +183,7 @@ kimai-cli me
 ```sh
 kimai-cli completion zsh > "${fpath[1]}/_kimai-cli"
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).
