@@ -40,7 +40,7 @@ the instance URL and config path.
 
 ```sh
 kimai-cli in --project Website --activity Development --description "Fix login"
-kimai-cli in --interactive
+kimai-cli in --interactive          # prompts for project, activity, description, tags
 kimai-cli status
 kimai-cli out
 ```
@@ -50,7 +50,7 @@ description, tags and billable flag:
 
 ```sh
 kimai-cli clone 1234
-kimai-cli clone --interactive
+kimai-cli clone --interactive       # pick a recent entry, then adjust it before it runs
 ```
 
 `--project` and `--activity` accept an ID, an exact name, or a unique
@@ -78,8 +78,13 @@ kimai-cli delete 1234 --force
 kimai-cli manual --begin "2026-08-23 09:00" --duration 90m -p Website -a Development
 ```
 
-`edit` changes only the fields given as flags. `current` refers to the running
-entry, and works with `show`, `edit` and `delete`.
+`edit` changes only the fields given as flags. `edit --interactive` asks which
+of description, project, activity, tags, begin and end to change, then prompts
+for each. `current` refers to the running entry, and works with `show`, `edit`
+and `delete`.
+
+`delete` prints what it is about to remove, so an entry is never discarded on
+the strength of a bare ID.
 
 Tags must already exist in Kimai. An instance that disallows creating tags on
 the fly ignores unknown ones without reporting an error, so kimai-cli warns

@@ -10,6 +10,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/anned20/kimai-cli/internal/kimai"
+	"github.com/anned20/kimai-cli/internal/output"
 	"github.com/spf13/cobra"
 )
 
@@ -188,4 +189,48 @@ func warnDroppedTags(requested []string, entry kimai.Timesheet) {
 		fmt.Fprintf(os.Stderr, "warning: tags not stored (they must already exist in Kimai): %s\n",
 			strings.Join(dropped, ", "))
 	}
+}
+
+// pickTags prompts for tags, offering the vocabulary the instance already
+// knows. Kimai drops tags that do not exist, so free text is not offered.
+func pickTags(ctx context.Context, current []string) ([]string, error) {
+	available, err := client.Tags(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(available) == 0 {
+		fmt.Fprintln(os.Stderr, "note: this Kimai instance has no tags defined")
+		return nil, nil
+	}
+
+	var chosen []string
+	prompt := &survey.MultiSelect{
+		Message:  "Tags",
+		Options:  available,
+		Default:  current,
+		PageSize: 15,
+	}
+	if err := survey.AskOne(prompt, &chosen); err != nil {
+		return nil, err
+	}
+	return chosen, nil
+}
+
+// describeEntry renders a one-line summary used when confirming destructive
+// actions, so an entry is never deleted by bare ID alone.
+func describeEntry(t kimai.Timesheet, l *kimai.Lookup) string {
+	description := t.Description
+	if description == "" {
+		description = "(no description)"
+	}
+	project := t.Project.Name
+	if project == "" && l != nil {
+		project = l.ProjectName(t.Project.ID)
+	}
+	state := output.Duration(t.Elapsed())
+	if t.Running() {
+		state += ", running"
+	}
+	return fmt.Sprintf("#%d  %s  [%s]  %s  %s",
+		t.ID, t.Begin.Local().Format("2006-01-02 15:04"), state, project, description)
 }

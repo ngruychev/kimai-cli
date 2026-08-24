@@ -98,9 +98,16 @@ func newInCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			if spec.description == "" && interactive {
-				if spec.description, err = promptString("Description", ""); err != nil {
-					return err
+			if interactive {
+				if spec.description == "" {
+					if spec.description, err = promptString("Description", ""); err != nil {
+						return err
+					}
+				}
+				if !cmd.Flags().Changed("tags") {
+					if spec.tags, err = pickTags(cmd.Context(), nil); err != nil {
+						return err
+					}
 				}
 			}
 
@@ -204,9 +211,44 @@ func newCloneCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if interactive {
+				if started, err = amendClone(cmd, started); err != nil {
+					return err
+				}
+			}
 			return out.renderEntry(output.NewEntry(*started, l))
 		},
 	}
 	out.register(cmd)
 	return cmd
+}
+
+// amendClone offers to adjust the freshly started copy. A cloned entry
+// usually needs a tweak to its description, and doing it here avoids a
+// separate edit against an already-running timer.
+func amendClone(cmd *cobra.Command, started *kimai.Timesheet) (*kimai.Timesheet, error) {
+	change, err := promptConfirm("Adjust description or tags?", false)
+	if err != nil || !change {
+		return started, err
+	}
+
+	description, err := promptString("Description", started.Description)
+	if err != nil {
+		return nil, err
+	}
+	tags, err := pickTags(cmd.Context(), started.Tags)
+	if err != nil {
+		return nil, err
+	}
+
+	form := kimai.TimesheetForm{
+		Description: &description,
+		Tags:        ptr(strings.Join(tags, ",")),
+	}
+	updated, err := client.UpdateTimesheet(cmd.Context(), started.ID, form)
+	if err != nil {
+		return nil, err
+	}
+	warnDroppedTags(tags, *updated)
+	return updated, nil
 }

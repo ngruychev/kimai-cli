@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/AlecAivazis/survey/v2"
 	"os"
 	"strings"
 	"time"
@@ -82,11 +84,9 @@ func newEditCmd() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				description, err := promptString("Description", current.Description)
-				if err != nil {
+				if err := promptEdits(cmd, l, current, &form); err != nil {
 					return err
 				}
-				form.Description = &description
 			}
 
 			updated, err := client.UpdateTimesheet(cmd.Context(), id, form)
@@ -116,17 +116,35 @@ func newDeleteCmd() *cobra.Command {
 			if err := setup(); err != nil {
 				return err
 			}
-			ids := make([]int, 0, len(args))
+			l, err := lookup(cmd.Context())
+			if err != nil {
+				return err
+			}
+
+			// Resolve each entry up front so the user sees what is at stake.
+			entries := make([]kimai.Timesheet, 0, len(args))
 			for _, arg := range args {
 				id, err := resolveEntryID(cmd, arg)
 				if err != nil {
 					return err
 				}
-				ids = append(ids, id)
+				entry, err := client.Timesheet(cmd.Context(), id)
+				if err != nil {
+					return err
+				}
+				entries = append(entries, *entry)
 			}
 
 			if !force {
-				ok, err := promptConfirm(fmt.Sprintf("Delete %d entries?", len(ids)), false)
+				// Preview only when asking; --force reports each deletion below.
+				for _, entry := range entries {
+					fmt.Fprintf(os.Stderr, "  %s\n", describeEntry(entry, l))
+				}
+				noun := "entries"
+				if len(entries) == 1 {
+					noun = "entry"
+				}
+				ok, err := promptConfirm(fmt.Sprintf("Delete the %d %s above?", len(entries), noun), false)
 				if err != nil {
 					return err
 				}
@@ -134,11 +152,11 @@ func newDeleteCmd() *cobra.Command {
 					return fmt.Errorf("aborted")
 				}
 			}
-			for _, id := range ids {
-				if err := client.DeleteTimesheet(cmd.Context(), id); err != nil {
+			for _, entry := range entries {
+				if err := client.DeleteTimesheet(cmd.Context(), entry.ID); err != nil {
 					return err
 				}
-				fmt.Fprintf(os.Stderr, "deleted #%d\n", id)
+				fmt.Fprintf(os.Stderr, "deleted %s\n", describeEntry(entry, l))
 			}
 			return nil
 		},
@@ -223,4 +241,93 @@ func newManualCmd() *cobra.Command {
 	cmd.Flags().StringVar(&end, "end", "", "end time")
 	cmd.Flags().StringVar(&duration, "duration", "", "length instead of --end, e.g. 90m")
 	return cmd
+}
+
+// promptEdits asks which fields to change and prompts for each, so that
+// interactive editing is not limited to the description.
+func promptEdits(cmd *cobra.Command, l *kimai.Lookup, current *kimai.Timesheet, form *kimai.TimesheetForm) error {
+	ctx := cmd.Context()
+
+	const (
+		fDescription = "description"
+		fProject     = "project"
+		fActivity    = "activity"
+		fTags        = "tags"
+		fBegin       = "begin"
+		fEnd         = "end"
+	)
+	options := []string{fDescription, fProject, fActivity, fTags, fBegin}
+	if !current.Running() {
+		options = append(options, fEnd)
+	}
+
+	var fields []string
+	prompt := &survey.MultiSelect{Message: "Fields to edit", Options: options}
+	if err := survey.AskOne(prompt, &fields); err != nil {
+		return err
+	}
+	if len(fields) == 0 {
+		return fmt.Errorf("nothing selected")
+	}
+
+	chosen := make(map[string]bool, len(fields))
+	for _, f := range fields {
+		chosen[f] = true
+	}
+
+	if chosen[fDescription] {
+		description, err := promptString("Description", current.Description)
+		if err != nil {
+			return err
+		}
+		form.Description = &description
+	}
+	if chosen[fProject] {
+		project, err := pickProject(l)
+		if err != nil {
+			return err
+		}
+		form.Project = &project.ID
+	}
+	if chosen[fActivity] {
+		projectID := current.Project.ID
+		if form.Project != nil {
+			projectID = *form.Project
+		}
+		activity, err := pickActivity(ctx, projectID)
+		if err != nil {
+			return err
+		}
+		form.Activity = &activity.ID
+	}
+	if chosen[fTags] {
+		tags, err := pickTags(ctx, current.Tags)
+		if err != nil {
+			return err
+		}
+		form.Tags = ptr(strings.Join(tags, ","))
+	}
+	if chosen[fBegin] {
+		answer, err := promptString("Begin (HH:MM or YYYY-MM-DD HH:MM)", current.Begin.Local().Format("15:04"))
+		if err != nil {
+			return err
+		}
+		when, err := parseWhen(answer)
+		if err != nil {
+			return err
+		}
+		form.Begin = &kimai.Time{Time: when}
+	}
+	if chosen[fEnd] {
+		answer, err := promptString("End (HH:MM or YYYY-MM-DD HH:MM)", current.End.Local().Format("15:04"))
+		if err != nil {
+			return err
+		}
+		when, err := parseWhen(answer)
+		if err != nil {
+			return err
+		}
+		form.End = &kimai.Time{Time: when}
+	}
+	return nil
 }
