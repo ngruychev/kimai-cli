@@ -85,10 +85,12 @@ func newConfigShowCmd() *cobra.Command {
 		Use:   "show",
 		Short: "Show the current configuration",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			c, err := config.Load()
+			c, err := config.LoadFile()
 			if err != nil {
 				return err
 			}
+			// Report how the token is obtained without obtaining it.
+			resolved := c.Token != "" || os.Getenv("KIMAI_TOKEN") != ""
 			shown := struct {
 				URL             string `json:"url"`
 				TokenCommand    string `json:"token_command"`
@@ -100,7 +102,7 @@ func newConfigShowCmd() *cobra.Command {
 			}{
 				URL:             c.URL,
 				TokenCommand:    c.TokenCommand,
-				TokenResolved:   c.Token != "",
+				TokenResolved:   resolved,
 				DefaultProject:  c.DefaultProject,
 				DefaultActivity: c.DefaultActivity,
 				StatusFormat:    c.StatusFormat,

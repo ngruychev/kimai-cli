@@ -52,7 +52,8 @@ func newRootCmd() *cobra.Command {
 		if cmd.Flags().Changed("interactive") {
 			return
 		}
-		if c, err := config.Load(); err == nil && c.Interactive {
+		// LoadFile, not Load: reading one setting must not decrypt a token.
+		if c, err := config.LoadFile(); err == nil && c.Interactive {
 			interactive = true
 		}
 	}

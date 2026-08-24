@@ -44,8 +44,22 @@ func Path() string {
 	return filepath.Join(dir, "kimai-cli", "config.toml")
 }
 
-// Load reads the config file and resolves the API token.
+// Load reads the config file and resolves the API token. Use it from
+// commands that talk to Kimai; LoadFile is enough to inspect settings.
 func Load() (*Config, error) {
+	c, err := LoadFile()
+	if err != nil {
+		return nil, err
+	}
+	if err := c.resolveToken(); err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+// LoadFile reads the config file without resolving the API token, so that
+// inspecting settings never triggers a decryption or a password prompt.
+func LoadFile() (*Config, error) {
 	path := Path()
 	var c Config
 	if _, err := toml.DecodeFile(path, &c); err != nil {
@@ -61,10 +75,6 @@ func Load() (*Config, error) {
 	c.URL = strings.TrimRight(c.URL, "/")
 	if c.URL == "" {
 		return nil, fmt.Errorf("no url set in %s", path)
-	}
-
-	if err := c.resolveToken(); err != nil {
-		return nil, err
 	}
 	return &c, nil
 }

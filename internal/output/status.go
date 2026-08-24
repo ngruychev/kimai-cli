@@ -35,9 +35,10 @@ type Status struct {
 }
 
 type cached struct {
-	value string
-	err   error
-	done  bool
+	value   string
+	seconds int
+	err     error
+	done    bool
 }
 
 // NewStatus builds a status context. entry is nil when the clock is stopped.
@@ -149,6 +150,35 @@ func (s *Status) Activity() (string, error) {
 	return l.ActivityName(s.entry.Activity.ID), nil
 }
 
+// CurrentSeconds is the running entry's elapsed time in whole seconds, for
+// callers that format durations themselves. Costs nothing extra.
+func (s *Status) CurrentSeconds() int {
+	if s.entry == nil {
+		return 0
+	}
+	return int(s.entry.Elapsed().Seconds())
+}
+
+// DailySeconds is today's total in whole seconds. Costs the same single
+// request as DailyDuration, and shares its memoised result.
+func (s *Status) DailySeconds() (int, error) {
+	return secondsOf(s.DailyDuration, s.daily)
+}
+
+// WeeklySeconds is this week's total in whole seconds, sharing
+// WeeklyDuration's memoised result.
+func (s *Status) WeeklySeconds() (int, error) {
+	return secondsOf(s.WeeklyDuration, s.weekly)
+}
+
+// secondsOf resolves a memoised total and returns the seconds it summed.
+func secondsOf(resolve func() (string, error), slot *cached) (int, error) {
+	if _, err := resolve(); err != nil {
+		return 0, err
+	}
+	return slot.seconds, nil
+}
+
 // DailyDuration totals today's entries. Costs one request, memoised.
 func (s *Status) DailyDuration() (string, error) {
 	start := time.Date(s.now.Year(), s.now.Month(), s.now.Day(), 0, 0, 0, 0, s.now.Location())
@@ -180,7 +210,7 @@ func (s *Status) total(slot *cached, begin, end time.Time) (string, error) {
 	for _, t := range entries {
 		sum += t.Elapsed()
 	}
-	slot.value = Duration(sum)
+	slot.value, slot.seconds = Duration(sum), int(sum.Seconds())
 	return slot.value, nil
 }
 
