@@ -1,0 +1,8 @@
+#!/bin/sh
+# Pick a recent entry description with fzf, or type a new one.
+
+[ -z "$DAYSBACK" ] && DAYSBACK=64
+START="$(date -d "today - $DAYSBACK days" -I)"
+TODAY="$(date -d 'today' -I)"
+
+kimai-cli log --json "$START" "$TODAY" | jq -r 'map(.description)[]' | tac | awk '!x[$0]++' | tac | fzf --tac --no-sort --print-query | tail -1

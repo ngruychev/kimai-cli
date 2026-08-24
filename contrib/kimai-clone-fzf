@@ -1,0 +1,27 @@
+#!/bin/sh
+# Clone a recent entry chosen with fzf, or start a new one if none matches.
+
+[ -z "$DAYSBACK" ] && DAYSBACK=64
+START="$(date -d "today - $DAYSBACK days" -I)"
+TODAY="$(date -d 'today' -I)"
+
+task="$(DAYSBACK="$DAYSBACK" kimai-fzf)"
+
+[ -n "$task" ] && task_id="$(kimai-cli log --json "$START" "$TODAY" | jq -r --arg t "$task" 'map(select(.description == $t) | .id)[]' | tail -1)"
+
+printf "Task is '%s'\n" "$task"
+printf "Task ID is '%s'\n" "$task_id"
+
+if [ -z "$task_id" ]; then
+  echo "No task found"
+  echo "Creating new task"
+  if [ -z "$task" ] || echo "$task" | sed 's/ //g' | grep -q '^$'; then
+    printf "Task description: "
+    read -r task
+  fi
+  # Kimai derives billable from the project and activity, so it is not passed here.
+  kimai-cli in --interactive --description "$task"
+  exit
+fi
+
+kimai-cli clone "$task_id"
